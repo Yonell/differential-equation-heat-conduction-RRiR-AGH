@@ -2,7 +2,8 @@
 
 #include <iostream>
 #include <string>
-//#define ARMA_USE_SUPERLU
+#define ARMA_USE_SUPERLU
+#define ARMA_DONT_USE_WRAPPER
 #include <armadillo>
 #include <conio.h>
 
@@ -56,14 +57,14 @@ double trapeze_method_for_the_product_two_ek_derivatives(int i, int j, double a,
 }
 
 double Bij(int i, int j, int n) {
-	return (abs(i - j) < 2) ? (
+	return  (
 		- ek(1, 2, 0, j, n) * ek_derivative(1, 2, 0, i, n)
 		- ek(0, 2, 0, j, n) * ek(0, 2, 0, i, n)
 		- 2 * ek(2, 2, 0, j, n) * ek_derivative(2, 2, 0, i, n)
 		+ 2 * ek(1, 2, 0, j, n) * ek_derivative(1, 2, 0, i, n)
 		+ trapeze_method_for_the_product_two_ek_derivatives(i, j, 0, 1, n, 1 / (10.0 * n))
 		+ 2 * trapeze_method_for_the_product_two_ek_derivatives(i, j, 1, 2, n, 1 / (10.0 * n))
-	) : 0;
+	);
 }
 
 double u(double x, arma::vec w, int n) {
@@ -107,8 +108,6 @@ int main(int argc, char* argv[]) {
 			show_graph = true;
 		if (strcmp(argv[i], "-sp") == 0 || strcmp(argv[i], "--use_sparse_algorithm") == 0){
 			use_sparse = true;
-			std::cout << "Sparse matricies are not available at the moment, because for some reason superlu library doesn't work.\n";
-			return -1;
 		}
 		if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--number_of_elements") == 0) {
 			use_argument_n = true;
@@ -126,30 +125,48 @@ int main(int argc, char* argv[]) {
 		std::cin >> n_elements;
 		std::cout << "\n";
 	}
-	arma::mat B(n_elements, n_elements);
-	arma::vec L(n_elements);
-	arma::vec W;
-	for (int j = 0; j < n_elements; j++)
-	{
-		for (int i = 0; i < n_elements; i++) {
-			B(i,j) = Bij(i, j, n_elements);
-		}
-		L(j) = Lj(j, n_elements);
-	}
-
-	if (use_sparse) {
-		//W = arma::spsolve(arma::sp_mat(B), L);
-	}
-	else {
-		W = arma::solve(B, L);
-	}
 
 	std::cout << "\n Solving equation: BW = L \n\n";
 
-	if (show_matrices) {
-		std::cout << "B =\n" << B << "\n";
-		std::cout << "L =\n" << L << "\n";
+	arma::vec W;
+
+	if (use_sparse) {
+		arma::sp_mat spB(n_elements, n_elements);
+		arma::vec L(n_elements);
+		for (int j = 0; j < n_elements; j++)
+		{
+			for (int i = 0; i < n_elements; i++) {
+				if(abs(i - j) < 2)
+					spB(i, j) = Bij(i, j, n_elements);
+			}
+			L(j) = Lj(j, n_elements);
+		}
+		W = arma::spsolve(spB, L);
+
+		if (show_matrices) {
+			std::cout << "B =\n" << spB << "\n";
+			std::cout << "L =\n" << L << "\n";
+		}
 	}
+	else {
+		arma::mat B(n_elements, n_elements);
+		arma::vec L(n_elements);
+		for (int j = 0; j < n_elements; j++)
+		{
+			for (int i = 0; i < n_elements; i++) {
+				if (abs(i - j) < 2)
+					B(i, j) = Bij(i, j, n_elements);
+			}
+			L(j) = Lj(j, n_elements);
+		}
+		W = arma::solve(B, L);
+
+		if (show_matrices) {
+			std::cout << "B =\n" << B << "\n";
+			std::cout << "L =\n" << L << "\n";
+		}
+	}
+
 	if (show_answer) {
 		std::cout << "W =\n" << W;
 	}

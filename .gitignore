@@ -38,3 +38,6 @@
 /RRiR/RRiR.vcxproj.filters
 /RRiR/RRiR.vcxproj.user
 /RRiR/packages/
+/RRiR/packages.config
+/RRiR/data.tmp
+/RRiR/include/
