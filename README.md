@@ -8,7 +8,7 @@ Dependencies:
 Also, for release binaries only gnuplot is necessary.
 
 To use the program on Windows open the folder containing RRiR.exe in a terminal and write for example:
-./RRiR -n 200 -g
+"./RRiR -n 200 -g"
 
 For all of the options write:
-./RRiR -h
+"./RRiR -h"
